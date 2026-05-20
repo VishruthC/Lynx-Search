@@ -52,7 +52,7 @@ The system is built as a modular data pipeline split into three distinct phases:
 ## 📂 Project Structure
 
 ```text
-my-search-engine/
+Lynx-Search/
 │
 ├── documents/            # Optional: Local sandbox .txt files for initial indexing
 ├── search_index/         # Auto-generated local DB storage (Git ignored)
