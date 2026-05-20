@@ -73,8 +73,8 @@ my-search-engine/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
+git clone https://github.com/VishruthC/Lynx-Search.git
+cd Lynx-Search
 ```
 
 ### 2. Install Dependencies
