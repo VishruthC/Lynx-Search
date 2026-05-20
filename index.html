@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Engine Sandbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-slate-100 font-sans antialiased">
+
+    <div class="max-w-4xl mx-auto px-4 py-16">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 mb-3">
+                🔥 Custom Search Engine
+            </h1>
+            <p class="text-slate-400 text-lg">AI-powered vector search database playground</p>
+        </div>
+
+        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl shadow-2xl backdrop-blur-md mb-8">
+            <form id="search-form" class="flex gap-3">
+                <input 
+                    type="text" 
+                    id="search-input"
+                    placeholder="Ask your index anything... (e.g., 'Who owns F1?')" 
+                    class="w-full bg-slate-950 border border-slate-700/60 rounded-xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all text-lg"
+                    required
+                >
+                <button 
+                    type="submit"
+                    class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer flex items-center justify-center min-w-[120px]"
+                >
+                    <span id="btn-text">Search</span>
+                </button>
+            </form>
+            
+            <div class="flex flex-wrap gap-2 mt-4 items-center">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Try querying:</span>
+                <button onclick="fillQuery('Who owns formula one?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700/40 transition-all cursor-pointer">Who owns formula one?</button>
+                <button onclick="fillQuery('F1 top speeds on straights')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700/40 transition-all cursor-pointer">F1 top speeds on straights</button>
+                <button onclick="fillQuery('How to improve react performance')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700/40 transition-all cursor-pointer">React performance</button>
+            </div>
+        </div>
+
+        <div id="results-meta" class="text-sm text-slate-400 mb-4 hidden"></div>
+
+        <div id="results-container" class="space-y-4">
+            <div class="text-center py-12 border border-dashed border-slate-800 rounded-2xl text-slate-500">
+                Type a message above or choose a suggestion pill to query your indexed data.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsMeta = document.getElementById('results-meta');
+        const btnText = document.getElementById('btn-text');
+
+        function fillQuery(text) {
+            searchInput.value = text;
+            executeSearch(text);
+        }
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            executeSearch(searchInput.value);
+        });
+
+        async function executeSearch(queryText) {
+            if (!queryText.trim()) return;
+
+            // Trigger visual Loading States
+            btnText.innerHTML = `<span class="animate-pulse">Searching...</span>`;
+            resultsContainer.innerHTML = `
+                <div class="flex justify-center items-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+                </div>`;
+
+            try {
+                const startTime = performance.now();
+                // Send API call to local FastAPI instance
+                const response = await fetch(`http://127.0.0.1:8000/search?q=${encodeURIComponent(queryText)}&limit=4`);
+                const data = await response.get_chunks ? await response.get_chunks() : await response.json();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime).toFixed(1);
+
+                btnText.innerText = "Search";
+                resultsContainer.innerHTML = "";
+
+                if (!data.results || data.results.length === 0) {
+                    resultsMeta.classList.add('hidden');
+                    resultsContainer.innerHTML = `
+                        <div class="bg-slate-900/40 border border-slate-800 text-center py-12 rounded-2xl text-slate-400">
+                            No matching documentation blocks found. Try adjusting your vocabulary query!
+                        </div>`;
+                    return;
+                }
+
+                // Show metadata metrics header
+                resultsMeta.innerText = `Found ${data.total_matches} semantic documentation chunks in ${duration}ms`;
+                resultsMeta.classList.remove('hidden');
+
+                // Generate clean UI result components dynamically
+                data.results.forEach(result => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900/50 border border-slate-800/80 p-6 rounded-2xl shadow-lg hover:border-slate-700/60 transition-all";
+                    
+                    // Format confidence colors dynamically based on percentage accuracy
+                    const badgeColor = result.confidence_score > 60 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+
+                    card.innerHTML = `
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-md max-w-xs sm:max-w-md md:max-w-xl truncate block font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/30">
+                                Source: ${result.source}
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">Chunk #${result.chunk_index}</span>
+                                <span class="text-xs font-bold font-mono px-2 py-1 rounded-md border ${badgeColor}">
+                                    ${result.confidence_score}% Match
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 leading-relaxed text-[15px] selection:bg-cyan-500/30">
+                            "${result.content}"
+                        </p>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Search API connection failure:", error);
+                btnText.innerText = "Search";
+                resultsMeta.classList.add('hidden');
+                resultsContainer.innerHTML = `
+                    <div class="bg-red-950/20 border border-red-900/50 text-red-400 p-6 rounded-2xl text-center">
+                        <strong class="block mb-1">Backend Connection Failed</strong>
+                        Make sure your FastAPI application server is actively running in your terminal window via <code class="bg-red-950/60 px-1.5 py-0.5 rounded text-xs font-mono text-red-300">python app.py</code>.
+                    </div>`;
+            }
+        }
+    </script>
+</body>
+</html>

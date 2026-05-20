@@ -1,0 +1,1 @@
+When building frontend web applications with React or Vite, keeping state clean and minimizing unnecessary re-renders is crucial for performance. Always profile your components.

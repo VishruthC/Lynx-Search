@@ -1,0 +1,17 @@
+# Python bytecode caches (generated automatically on script runs)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Vector Database data (where your crawled text coordinates actually live)
+search_index/
+
+# Virtual Environments (highly recommended if you use them later)
+venv/
+.venv/
+env/
+
+# Operating system system files
+.DS_Store
+Thumbs.db
